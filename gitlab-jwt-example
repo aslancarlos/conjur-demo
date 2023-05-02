@@ -1,0 +1,25 @@
+stages:
+  - read-secrets
+  - build
+  - test
+  - deploy
+
+
+read-secrets:
+  tags:
+    - jwt
+  stage: read-secrets
+  script:
+    - echo $CI_JOB_JWT | base64
+    - echo ""
+    - 'export AUTHN_TOKEN=$(curl -sk --header "Content-Type: application/x-www-form-urlencoded" --header "Accept-Encoding: base64" --request POST "https://ec2-177-71-173-255.sa-east-1.compute.amazonaws.com/authn-jwt/gitlab1/cybrlab/authenticate" --data-urlencode "jwt=$CI_JOB_JWT")'
+
+    - echo "Fetching a username"
+    - export USERNAME=$(curl -k --header "Authorization:Token token=\"${AUTHN_TOKEN}\"" -X GET "https://${CONJUR_SERVER}/secrets/cybrlab/variable/vault1/lob1/k8s-demo/k8sdemo_user/username")
+
+    - echo "Fetching a password"
+    - export PASSWORD=$(curl -k --header "Authorization:Token token=\"${AUTHN_TOKEN}\"" -X GET "https://${CONJUR_SERVER}/secrets/cybrlab/variable/vault1/lob1/k8s-demo/k8sdemo_user/password")
+
+    - echo "Fetching ADDRESS"
+    - export ADDRESS=$(curl -k --header "Authorization:Token token=\"${AUTHN_TOKEN}\"" -X GET "https://${CONJUR_SERVER}/secrets/cybrlab/variable/vault1/lob1/k8s-demo/k8sdemo_user/address")
+  
